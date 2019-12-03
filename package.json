@@ -1,0 +1,19 @@
+{
+  "name": "larelch",
+  "version": "0.0.0",
+  "description": "Latest release checker",
+  "main": "index.ts",
+  "author": "Iku Iwasa <iku.iwasa@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc index.ts",
+    "watch": "tsc -w index.ts"
+  },
+  "dependencies": {
+    "@octokit/graphql": "^4.3.1"
+  },
+  "devDependencies": {
+    "dotenv": "^8.2.0",
+    "typescript": "^3.7.2"
+  }
+}
