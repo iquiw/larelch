@@ -2,10 +2,10 @@ import * as dotenv from 'dotenv';
 import { graphql } from '@octokit/graphql';
 
 async function getReleases(owner: string, project: string, before: string, num: number = 10) {
-  const { repository } = await graphql(`query releases($owner: String!, $project: String!, $num: Int!, $before: String)
+  const { repository } = await graphql(`query releases($owner: String!, $project: String!, $before: String, $num: Int!)
 {
   repository(owner: $owner, name: $project) {
-    releases(last: $num, before: $before) {
+    releases(before: $before, last: $num) {
       nodes {
         isPrerelease
         isDraft
