@@ -1,19 +1,19 @@
 import * as dotenv from 'dotenv';
 import { graphql } from '@octokit/graphql';
 
-async function getReleases(owner: string, project: string, before: string, num: number = 10) {
-  const { repository } = await graphql(`query releases($owner: String!, $project: String!, $before: String, $num: Int!)
+async function getReleases(owner: string, project: string, after: string, num: number = 10) {
+  const { repository } = await graphql(`query releases($owner: String!, $project: String!, $after: String, $num: Int!)
 {
   repository(owner: $owner, name: $project) {
-    releases(before: $before, last: $num) {
+    releases(after: $after, first: $num, orderBy: { direction: DESC, field: CREATED_AT }) {
       nodes {
         isPrerelease
         isDraft
         tagName
       }
       pageInfo {
-        startCursor
-        hasPreviousPage
+        endCursor
+        hasNextPage
       }
     }
   }
@@ -21,7 +21,7 @@ async function getReleases(owner: string, project: string, before: string, num: 
   owner,
   project,
   num,
-  before,
+  after,
   headers: {
     authorization: `token ${process.env.GITHUB_TOKEN}`
   }
@@ -30,17 +30,17 @@ async function getReleases(owner: string, project: string, before: string, num: 
 }
 
 async function getLatestRelease(owner: string, project: string) {
-  let hasPrevious = true;
-  let before = null;
-  while (hasPrevious) {
-    const releases = await getReleases(owner, project, before);
-    for (let node of releases.nodes.reverse()) {
+  let hasNext = true;
+  let after = null;
+  while (hasNext) {
+    const releases = await getReleases(owner, project, after, 5);
+    for (let node of releases.nodes) {
       if (!node.isPrerelease && !node.isDraft) {
         return node;
       }
     }
-    before = releases.pageInfo.startCursor;
-    hasPrevious = releases.pageInfo.hasPreviousPage;
+    after = releases.pageInfo.endCursor;
+    hasNext = releases.pageInfo.hasNextPage;
   }
   return null;
 }
