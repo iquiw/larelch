@@ -76,7 +76,7 @@ async function getMatchedTag(owner: string, project: string) {
   let after = null;
   while (hasNext) {
     const refs = await getTags(owner, project, after);
-    for (let node of refs.nodes.reverse()) {
+    for (let node of refs.nodes) {
       if (/^v?[0-9.]+$/.test(node.name)) {
         return node;
       }
