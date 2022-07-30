@@ -10,7 +10,7 @@ async function getReleases(owner: string, project: string, after: string, num: n
         isPrerelease
         isDraft
         tagCommit {
-          abbreviatedOid
+          oid
         }
         tagName
       }
@@ -56,7 +56,7 @@ async function getTags(owner: string, project: string, after: string, num: numbe
       nodes {
         name
         target {
-          abbreviatedOid
+          oid
         }
       }
       pageInfo {
@@ -93,6 +93,9 @@ async function getMatchedTag(owner: string, project: string) {
   return null;
 }
 
+function abbrev(oid: string, num: number = 8): string {
+  return oid.substring(0, num);
+}
 
 async function main() {
   for (let i = 2; i < process.argv.length; i++) {
@@ -105,14 +108,14 @@ async function main() {
     if (tag) {
       const tag = await getMatchedTag(owner, project);
       if (tag) {
-        console.log(`${repo}: ${tag.name} ${tag.target.abbreviatedOid}`);
+        console.log(`${repo}: ${tag.name} ${abbrev(tag.target.oid)}`);
       } else {
         console.log(`${repo}: No tag found!`);
       }
     } else {
       const release = await getLatestRelease(owner, project);
       if (release) {
-        console.log(`${repo}: ${release.tagName} ${release.tagCommit.abbreviatedOid}`);
+        console.log(`${repo}: ${release.tagName} ${abbrev(release.tagCommit.oid)}`);
       } else {
         console.log(`${repo}: No release found!`);
       }
