@@ -1,11 +1,15 @@
 import * as dotenv from 'dotenv';
 import { graphql } from '@octokit/graphql';
 
-async function getReleases(owner: string, project: string, after: string, num: number = 10) {
-  const { repository } = await graphql(`query releases($owner: String!, $project: String!, $after: String, $num: Int!)
+async function getReleases(owner: string, project: string, after: string, order: boolean = true, num: number = 10) {
+  let orderCondition = '';
+  if (order) {
+    orderCondition = ', orderBy: { direction: DESC, field: CREATED_AT }';
+  }
+  const { repository } = await graphql<any>(`query releases($owner: String!, $project: String!, $after: String, $num: Int!)
 {
   repository(owner: $owner, name: $project) {
-    releases(after: $after, first: $num, orderBy: { direction: DESC, field: CREATED_AT }) {
+    releases(after: $after, first: $num ${orderCondition}) {
       nodes {
         isPrerelease
         isDraft
@@ -13,6 +17,7 @@ async function getReleases(owner: string, project: string, after: string, num: n
           oid
         }
         tagName
+        createdAt
       }
       pageInfo {
         endCursor
@@ -32,11 +37,11 @@ async function getReleases(owner: string, project: string, after: string, num: n
   return repository.releases;
 }
 
-async function getLatestRelease(owner: string, project: string) {
+async function getLatestRelease(owner: string, project: string, order: boolean) {
   let hasNext = true;
   let after = null;
   while (hasNext) {
-    const releases = await getReleases(owner, project, after, 5);
+    const releases = await getReleases(owner, project, after, order, 5);
     for (let node of releases.nodes) {
       if (!node.isPrerelease && !node.isDraft) {
         return node;
@@ -48,11 +53,15 @@ async function getLatestRelease(owner: string, project: string) {
   return null;
 }
 
-async function getTags(owner: string, project: string, after: string, num: number = 10) {
-  const { repository } = await graphql(`query tags($owner: String!, $project: String!, $after: String, $num: Int!)
+async function getTags(owner: string, project: string, after: string, order: boolean = true, num: number = 10) {
+  let orderCondition = '';
+  if (order) {
+    orderCondition = ', orderBy: { direction: DESC, field: TAG_COMMIT_DATE }';
+  }
+  const { repository } = await graphql<any>(`query tags($owner: String!, $project: String!, $after: String, $num: Int!)
 {
   repository(owner: $owner, name: $project) {
-    refs(first: $num, after: $after, refPrefix: "refs/tags/", orderBy: { direction: DESC, field: TAG_COMMIT_DATE }) {
+    refs(first: $num, after: $after, refPrefix: "refs/tags/"${orderCondition}) {
       nodes {
         name
         target {
@@ -77,11 +86,11 @@ async function getTags(owner: string, project: string, after: string, num: numbe
   return repository.refs;
 }
 
-async function getMatchedTag(owner: string, project: string) {
+async function getMatchedTag(owner: string, project: string, order: boolean) {
   let hasNext = true;
   let after = null;
   while (hasNext) {
-    const refs = await getTags(owner, project, after);
+    const refs = await getTags(owner, project, after, order);
     for (let node of refs.nodes) {
       if (/^v?[0-9.]+$/.test(node.name)) {
         return node;
@@ -100,20 +109,26 @@ function abbrev(oid: string, num: number = 8): string {
 async function main() {
   for (let i = 2; i < process.argv.length; i++) {
     let repo = process.argv[i];
+    let order = true;
     const tag = /tag:(.*)/.exec(repo);
     if (tag) {
       repo = tag[1];
     }
+    const noorder = /(.*):noorder/.exec(repo);
+    if (noorder) {
+      order = false;
+      repo = noorder[1];
+    }
     const [owner, project] = repo.split('/');
     if (tag) {
-      const tag = await getMatchedTag(owner, project);
+      const tag = await getMatchedTag(owner, project, order);
       if (tag) {
         console.log(`${repo}: ${tag.name} ${abbrev(tag.target.oid)}`);
       } else {
         console.log(`${repo}: No tag found!`);
       }
     } else {
-      const release = await getLatestRelease(owner, project);
+      const release = await getLatestRelease(owner, project, order);
       if (release) {
         console.log(`${repo}: ${release.tagName} ${abbrev(release.tagCommit.oid)}`);
       } else {
