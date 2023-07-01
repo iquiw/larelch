@@ -10,11 +10,11 @@
     "watch": "tsc -w index.ts"
   },
   "dependencies": {
-    "@octokit/graphql": "^5.0.5",
-    "dotenv": "^16.0.3"
+    "@octokit/graphql": "^6.0.1",
+    "dotenv": "^16.3.1"
   },
   "devDependencies": {
-    "@types/node": "^18.16.5",
-    "typescript": "^5.0.4"
+    "@types/node": "^20.3.3",
+    "typescript": "^5.1.6"
   }
 }
