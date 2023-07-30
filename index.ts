@@ -102,8 +102,12 @@ async function getMatchedTag(owner: string, project: string, order: boolean) {
   return null;
 }
 
-function abbrev(oid: string, num: number = 8): string {
-  return oid.substring(0, num);
+function abbrev(oid: string, num: number = 0): string {
+  if (num == 0) {
+    return oid;
+  } else {
+    return oid.substring(0, num);
+  }
 }
 
 async function main() {
