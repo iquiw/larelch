@@ -3,11 +3,12 @@
   "version": "0.0.0",
   "description": "Latest release checker",
   "main": "index.ts",
+  "type": "module",
   "author": "Iku Iwasa <iku.iwasa@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc index.ts",
-    "watch": "tsc -w index.ts"
+    "build": "tsc",
+    "watch": "tsc -w"
   },
   "dependencies": {
     "@octokit/graphql": "^8.1.1",

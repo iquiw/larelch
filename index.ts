@@ -1,7 +1,44 @@
 import * as dotenv from 'dotenv';
 import { graphql } from '@octokit/graphql';
 
-async function getReleases(owner: string, project: string, after: string, order: boolean = true, num: number = 10) {
+interface PageInfo {
+  endCursor: string,
+  hasNextPage: boolean,
+}
+
+interface TagCommit {
+  oid: string,
+}
+
+interface PageInfo {
+  endCursor: string,
+  hasNextPage: boolean,
+}
+
+interface Node {
+  isPrerelease: boolean,
+  isDraft: boolean,
+  tagCommit: TagCommit,
+  tagName: string,
+  createdAt: string,
+}
+
+interface Release {
+  nodes: Node[],
+  pageInfo: PageInfo,
+}
+
+interface RefNode {
+  name: string,
+  target: TagCommit,
+}
+
+interface Ref {
+  nodes: RefNode[],
+  pageInfo: PageInfo,
+}
+
+async function getReleases(owner: string, project: string, after: string | null, order: boolean = true, num: number = 10): Promise<Release> {
   let orderCondition = '';
   if (order) {
     orderCondition = ', orderBy: { direction: DESC, field: CREATED_AT }';
@@ -37,11 +74,11 @@ async function getReleases(owner: string, project: string, after: string, order:
   return repository.releases;
 }
 
-async function getLatestRelease(owner: string, project: string, order: boolean) {
+async function getLatestRelease(owner: string, project: string, order: boolean): Promise<Node | null> {
   let hasNext = true;
   let after = null;
   while (hasNext) {
-    const releases = await getReleases(owner, project, after, order, 5);
+    const releases: Release = await getReleases(owner, project, after, order, 5);
     for (let node of releases.nodes) {
       if (!node.isPrerelease && !node.isDraft) {
         return node;
@@ -53,7 +90,7 @@ async function getLatestRelease(owner: string, project: string, order: boolean) 
   return null;
 }
 
-async function getTags(owner: string, project: string, after: string, order: boolean = true, num: number = 10) {
+async function getTags(owner: string, project: string, after: string | null, order: boolean = true, num: number = 10): Promise<Ref> {
   let orderCondition = '';
   if (order) {
     orderCondition = ', orderBy: { direction: DESC, field: TAG_COMMIT_DATE }';
@@ -90,7 +127,7 @@ async function getMatchedTag(owner: string, project: string, order: boolean) {
   let hasNext = true;
   let after = null;
   while (hasNext) {
-    const refs = await getTags(owner, project, after, order);
+    const refs: Ref = await getTags(owner, project, after, order);
     for (let node of refs.nodes) {
       if (/^v?[0-9.]+$/.test(node.name)) {
         return node;
