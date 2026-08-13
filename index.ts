@@ -1,4 +1,5 @@
-import * as dotenv from 'dotenv';
+import process from 'node:process';
+
 import { graphql } from '@octokit/graphql';
 
 interface PageInfo {
@@ -179,5 +180,4 @@ async function main() {
   }
 }
 
-dotenv.config();
 main();

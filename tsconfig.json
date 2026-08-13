@@ -3,7 +3,8 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "strict": true,
-    "target": "es2023"
+    "target": "es2025",
+    "types": ["node"]
   },
   "include": ["**/*.ts"]
 }
